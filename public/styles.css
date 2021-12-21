@@ -1,0 +1,44 @@
+body {
+  font-family: 'Open Sans', sans-serif;
+  font-family: 'Source Code Pro', monospace;
+  margin: 30px;
+}
+
+h1 {
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ccc;
+}
+
+.table-item {
+  margin-bottom: 15px;
+}
+
+.table-item a {
+  color: #3498db;
+}
+
+.table-item a:hover {
+  cursor: pointer;
+  color: #2980b9;
+}
+
+/**************************
+* Styles for Blog Item
+**************************/
+
+
+.markdown-body {
+  padding: 20px 0px;
+  line-height: 24px;
+}
+
+.markdown-body h3 {
+  padding: 10px 0px;
+  border-bottom: 1px solid #ccc;
+  margin: 0px;
+}
+
+.markdown-body p {
+  padding: 10px 0px;
+}
+
