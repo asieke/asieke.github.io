@@ -3,7 +3,7 @@ const makeEntryHTML = (content, meta) => {
   <html>
     <head>
       <title>${meta.title}</title>
-      <link rel="stylesheet" href="../styles.css">
+      <link rel="stylesheet" href="./styles.css">
     </head>
     <body>
       <a class='back-button' href='/'>Back to Home</a>

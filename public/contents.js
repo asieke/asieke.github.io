@@ -1,1 +1,1 @@
-const TABLE_OF_CONTENTS=[{"date":"2021-12-21","title":"Hello there","author":"Alex","url":"./entries/2021-12-21.html"},{"date":"2021-12-22","title":"My Awesome Second Post","author":"Alex","url":"./entries/2021-12-22.html"}];
+const TABLE_OF_CONTENTS=[{"date":"2021-12-21","title":"Hello there","author":"Alex","url":"./entries/2021-12-21.html"},{"date":"2021-12-22","title":"My Awesome Second Post","author":"Alex","url":"./entries/2021-12-22.html"},{"date":"2021-12-20","title":"Android Pay FAQs","author":"Alex","url":"./entries/2021-12-20.html"}];
