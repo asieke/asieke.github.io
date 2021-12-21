@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "deploy": "node build.js && git add . && git commit -m 'updated `%Y-%m-%d %H:%M:%S`' && git push origin master && git push heroku master"
+    "deploy": "node build.js && git add . &&  && git push origin master && git push heroku master",
+    "commit": "git add . && git commit -m \"generated files on `date +'%Y-%m-%d %H:%M:%S'`\""
   },
   "author": "",
   "license": "ISC",
