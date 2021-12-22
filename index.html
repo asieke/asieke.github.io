@@ -28,8 +28,14 @@
     TABLE_OF_CONTENTS.forEach(i => {
       let html = `
         <div class='table-item'>
-          <span class='table-date'>${i.date}</span>
-          <a href=${i.url}>${i.title}</a>
+          <div class='table-date'>
+            ${i.date}<br />
+            <span>${i.author}</span>
+          </div>
+          <div class='table-meta'>
+            <a href=${i.url}>${i.title}</a><br />
+            <span>${i.description}</span>
+          </div>
         </div>
       `
       document.getElementById("tableofcontents").insertAdjacentHTML("afterend", html);
