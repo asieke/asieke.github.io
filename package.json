@@ -5,13 +5,12 @@
   "main": "index.js",
   "scripts": {
     "build": "node build.js",
-    "deploy": "node build.js && git add . && git commit -m \"updated: `date +'%Y-%m-%d %H:%M:%S'`\" && git push origin master && git push heroku master"
+    "deploy": "node build.js && git add . && git commit -m \"updated: `date +'%Y-%m-%d %H:%M:%S'`\" && git push origin master"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "highlight.js": "^11.3.1",
-    "marked": "^4.0.8",
-    "nodemon": "^2.0.15"
+    "marked": "^4.0.8"
   }
 }
