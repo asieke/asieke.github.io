@@ -42,7 +42,7 @@ const files = fs.readdir('./markdown/entries')
     let promises = []; let tableOfContents = [];
     data.forEach(contents => {
       let lines = contents.split('\n');
-      let url = './entries/' + lines[0] + '.html';
+      let url = 'public/entries/' + lines[0] + '.html';
       let meta = {
         date: lines[0],
         title: lines[1],

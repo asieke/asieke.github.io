@@ -8,7 +8,7 @@ const makeEntryHTML = (content, meta) => {
     </head>
     <body>
       <div class='container'>
-        <div class='logo'><a href='/'><img src='../images/full-stack-logo.svg'></a></div>
+        <div class='logo'><a href='../../index.html'><img src='../images/full-stack-logo.svg'></a></div>
         <div class='links'>
           <a href='/pages/about.html'>About</a>
           <a href='/pages/contact.html'>Contact</a>
