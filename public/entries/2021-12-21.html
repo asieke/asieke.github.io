@@ -26,7 +26,7 @@
 <h2 id="tools-used">Tools Used</h2>
 <p>You can see the repo for this blog <a href="https://github.com/asieke/sieke-journal">here</a>.  Outside of the basic node/express packages, I used <code>marked</code> to convert markdown to HTML and <code>highlight.js</code> to do syntax highlighting for the markdown.</p>
 <h2 id="end-result">End Result</h2>
-<p>The basic file structure of the app is below.  A build script <code>build.js</code> runs and compiles everything in the markdown directory into static HTML files which are output to the public/ directory.  Some default CSS styles the HTMLified markdown to resemble the markdown you&#39;d see in a standard Github README.  The only tricky part was getting the syntax highlighting to work.  The build script also updates the table of contents in index.html.</p>
+<p>The basic file structure of the app is below.  A build script <code>build.js</code> runs and compiles everything in the markdown directory into static HTML files which are output to the public/ directory.  Some default CSS styles the HTMLified markdown to resemble the markdown you&#39;d see in a standard Github README.  The build script also updates the table of contents in index.html.</p>
 <pre><code class="hljs language-bash">├── build.js
 ├── index.js
 ├── markdown
