@@ -1,1 +1,1 @@
-const TABLE_OF_CONTENTS=[{"date":"2021-12-21","title":"Hello there","author":"Alex","url":"./entries/2021-12-21.html"},{"date":"2021-12-22","title":"My Awesome Second Post","author":"Alex","url":"./entries/2021-12-22.html"},{"date":"2021-12-20","title":"Hello there","author":"Alex","url":"./entries/2021-12-20.html"},{"date":"2021-12-19","title":"Hello there","author":"Alex","url":"./entries/2021-12-19.html"}];
+const TABLE_OF_CONTENTS=[{"date":"2021-12-21","title":"Creating a basic throwback blog generator","author":"Alex","url":"./entries/2021-12-21.html"}];

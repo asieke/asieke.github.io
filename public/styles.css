@@ -1,44 +1,71 @@
 body {
-  font-family: 'Open Sans', sans-serif;
-  font-family: 'Source Code Pro', monospace;
-  margin: 30px;
-}
-
-h1 {
+  font-family: Helvetica, arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding-top: 10px;
   padding-bottom: 10px;
-  border-bottom: 1px solid #ccc;
+  background-color: #f3f3f3;
+  padding: 10px 30px 30px 30px;
+  color: #333;
 }
 
-.table-item {
-  margin-bottom: 15px;
-}
-
-.table-item a {
-  color: #3498db;
-}
-
-.table-item a:hover {
-  cursor: pointer;
-  color: #2980b9;
-}
-
-/**************************
-* Styles for Blog Item
-**************************/
-
-
-.markdown-body {
-  padding: 20px 0px;
-  line-height: 24px;
-}
-
-.markdown-body h3 {
-  padding: 10px 0px;
-  border-bottom: 1px solid #ccc;
+.container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 0px;
   margin: 0px;
 }
 
-.markdown-body p {
-  padding: 10px 0px;
+.links {
+  margin: 10px 30px;
+  padding-top: 3px;
+}
+
+.links a {
+  margin-left: 10px;
+  margin-top: 3px;
+}
+
+.logo {
+  cursor: pointer;
+}
+
+div.logo img {
+  height: 50px;
+}
+
+h1 {
+  font-size: 24px;
+  color: black;
+  border-bottom: 1px solid #ccc;
+  margin: 20px 0 10px;
+  padding: 0;
+  font-weight: bold;
+  -webkit-font-smoothing: antialiased;
+  cursor: text;
+  position: relative;
+}
+
+.tablecontainer{
+  padding-left: 10px;
+}
+
+.table-item {
+  padding: 10px 0px 15px 0px;
+}
+
+.table-item span {
+  padding-right: 10px;
+}
+
+a {
+  color: #3498db;
+  text-decoration: none;
+}
+
+a:hover {
+  cursor: pointer;
+  color: #2980b9;
 }
 
