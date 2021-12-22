@@ -27,6 +27,33 @@
 <p>You can see the repo for this blog <a href="https://github.com/asieke/sieke-journal">here</a>.  Outside of the basic node/express packages, I used <code>marked</code> to convert markdown to HTML and <code>highlight.js</code> to do syntax highlighting for the markdown.</p>
 <h2 id="end-result">End Result</h2>
 <p>The heavy lifting of the build process is all encapsulated in one file that takes care of parsing the markdown and generating an HTML file in the public directory.  The entire site is now simply static HTML.</p>
+<h2 id="fun-learnings">Fun Learnings</h2>
+<p>Doing syntax highlighting in the exported HTML was super easy thanks to markdown + highlight.js
+This code runs during the build process + then some basic css is required to style the HTML.</p>
+<pre><code class="hljs language-javascript">marked.<span class="hljs-title function_">setOptions</span>({
+  <span class="hljs-attr">renderer</span>: <span class="hljs-keyword">new</span> marked.<span class="hljs-title class_">Renderer</span>(),
+  <span class="hljs-attr">highlight</span>: <span class="hljs-keyword">function</span> (<span class="hljs-params">code, lang</span>) {
+    <span class="hljs-keyword">const</span> hljs = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;highlight.js&#x27;</span>);
+    <span class="hljs-keyword">const</span> language = hljs.<span class="hljs-title function_">getLanguage</span>(lang) ? lang : <span class="hljs-string">&#x27;plaintext&#x27;</span>;
+    <span class="hljs-keyword">return</span> hljs.<span class="hljs-title function_">highlight</span>(code, { language }).<span class="hljs-property">value</span>;
+  },
+  <span class="hljs-attr">langPrefix</span>: <span class="hljs-string">&#x27;hljs language-&#x27;</span>, <span class="hljs-comment">// highlight.js css expects a top-level &#x27;hljs&#x27; class.</span>
+  <span class="hljs-attr">pedantic</span>: <span class="hljs-literal">false</span>,
+  <span class="hljs-attr">gfm</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">breaks</span>: <span class="hljs-literal">false</span>,
+  <span class="hljs-attr">sanitize</span>: <span class="hljs-literal">false</span>,
+  <span class="hljs-attr">smartLists</span>: <span class="hljs-literal">true</span>,
+  <span class="hljs-attr">smartypants</span>: <span class="hljs-literal">false</span>,
+  <span class="hljs-attr">xhtml</span>: <span class="hljs-literal">false</span>
+});
+</code></pre>
+<p>One click deploy was accomplished with the following script.  Learned some silly bash / github scripting that enabled me to add a commit message with the current date.</p>
+<pre><code class="hljs language-json">  <span class="hljs-attr">&quot;scripts&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
+    <span class="hljs-attr">&quot;start&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;node index.js&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;dev&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;nodemon index.js&quot;</span><span class="hljs-punctuation">,</span>
+    <span class="hljs-attr">&quot;deploy&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;node build.js &amp;&amp; git add . &amp;&amp; git commit -m \&quot;updated: `date +&#x27;%Y-%m-%d %H:%M:%S&#x27;`\&quot; &amp;&amp; git push origin master &amp;&amp; git push heroku master&quot;</span>
+  <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
+</code></pre>
 
       </div>
     </body>
