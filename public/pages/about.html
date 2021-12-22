@@ -1,8 +1,7 @@
-const makeEntryHTML = (content, meta) => {
-  let html = `
+
   <html>
     <head>
-      <title>${meta.title}</title>
+      <title>About me</title>
       <link rel="stylesheet" href="../css/styles.css">
       <link rel="stylesheet" href="../css/markdown.css">
     </head>
@@ -16,13 +15,10 @@ const makeEntryHTML = (content, meta) => {
         </div>
       </div>
       <div class='markdown-body'>
-        ${content}
+        <h1 id="about-me">About me</h1>
+<p>My name is Alex and I a recovering product manager and current software engineer.</p>
+
       </div>
     </body>
   </html>
-  `;
-
-  return html;
-};
-
-module.exports = makeEntryHTML;
+  

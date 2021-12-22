@@ -2,20 +2,20 @@
   <html>
     <head>
       <title>Creating a basic throwback blog generator</title>
-      <link rel="stylesheet" href="./styles.css">
-      <link rel="stylesheet" href="../styles.css">
+      <link rel="stylesheet" href="../css/styles.css">
+      <link rel="stylesheet" href="../css/markdown.css">
     </head>
     <body>
       <div class='container'>
         <div class='logo'><a href='/'><img src='../images/full-stack-logo.svg'></a></div>
         <div class='links'>
-          <a href='/about.html'>About</a>
-          <a href='/contact.html'>Contact</a>
-          <a href='/fun.html'>Fun Stuff</a>
+          <a href='/pages/about.html'>About</a>
+          <a href='/pages/contact.html'>Contact</a>
+          <a href='/pages/fun.html'>Fun Stuff</a>
         </div>
       </div>
       <div class='markdown-body'>
-        <h1 id="my-first-journal-entry">My First Journal Entry</h1>
+        <h1 id="creating-a-throwback-blog-generator">Creating a Throwback Blog Generator</h1>
 <p>The throwback blog generator was a fun node exploration.  There is no shortage of bare bones blog generators, but I thought it would be fun to create my own.  My requirements were:</p>
 <ul>
 <li>Write blog entries in markdown</li>
@@ -36,7 +36,7 @@
 │   ├── index.html
 </code></pre>
 <h2 id="fun-learnings">Fun Learnings</h2>
-<p>Doing syntax highlighting in the exported HTML was super easy thanks to markdown + highlight.js
+<p>Doing syntax highlighting in the exported HTML was super easy thanks to markdown + highlight.js.
 This code runs during the build process + then some basic css is required to style the HTML.</p>
 <pre><code class="hljs language-javascript">marked.<span class="hljs-title function_">setOptions</span>({
   <span class="hljs-attr">renderer</span>: <span class="hljs-keyword">new</span> marked.<span class="hljs-title class_">Renderer</span>(),

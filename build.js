@@ -19,10 +19,24 @@ marked.setOptions({
   xhtml: false
 });
 
-
-const files = fs.readdir('./markdown')
+const pages = fs.readdir('./markdown/pages')
   .then(files => {
-    return Promise.all(files.map(f => fs.readFile('./markdown/' + f, 'utf8')))
+    files.forEach(f => {
+      fs.readFile('./markdown/pages/' + f, 'utf8')
+        .then(contents => {
+          let title = contents.split("\n")[0];
+          let html = makeEntryHTML(marked.parse(contents), { title: title.substr(2) });
+          let path = './public/pages/' + f.split(".")[0] + ".html";
+          fs.writeFile(path, html).
+            then(() => console.log('Done - writing' + path));
+        });
+    });
+  });
+
+
+const files = fs.readdir('./markdown/entries')
+  .then(files => {
+    return Promise.all(files.map(f => fs.readFile('./markdown/entries/' + f, 'utf8')));
   })
   .then(data => {
     let promises = []; let tableOfContents = [];
@@ -40,34 +54,14 @@ const files = fs.readdir('./markdown')
       let html = makeEntryHTML(marked.parse(lines.slice(4).join('\n')), meta);
       let path = './public/entries/' + lines[0] + '.html';
       promises.push(fs.writeFile(path, html));
-    })
+    });
     outJS = "const TABLE_OF_CONTENTS=" + JSON.stringify(tableOfContents) + ";";
-    promises.push(fs.writeFile('./public/contents.js', outJS));
+    promises.push(fs.writeFile('./public/data.js', outJS));
     return Promise.all(promises);
   })
   .then(() => {
-    console.log("DONE");
+    console.log("Done - writing entries pages");
   })
-  .catch(err => console.error(err))
+  .catch(err => console.error(err));
 
-
-
-// fs.readdir('./markdown', (err, files) => {
-//   files.forEach(file => {
-//     fs.readFile('./markdown/' + file, 'utf8', (err, data) => {
-//       if (err) {
-//         console.error(err)
-//         return
-//       }
-//       let lines = data.split('\n');
-//       contents.push({
-//         date: lines[0],
-//         title: lines[1],
-//         author: lines[2]
-//       })
-//       let md = lines.slice(4).join('\n');
-//       console.log(md);
-//     })
-//   });
-// });
 
