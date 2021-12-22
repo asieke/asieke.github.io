@@ -1,1 +1,1 @@
-const TABLE_OF_CONTENTS=[{"date":"2021-12-21","title":"Creating a basic throwback blog generator","author":"Alex","url":"public/entries/2021-12-21.html"}];
+const TABLE_OF_CONTENTS=[{"date":"2021-12-21","title":"Creating a basic throwback blog generator","author":"Alex","description":"building the basic markdown parser that is used to generate this blog","url":"public/entries/2021-12-21-create-blog.html"}];
