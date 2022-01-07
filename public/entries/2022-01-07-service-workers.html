@@ -1,0 +1,108 @@
+
+  <html>
+    <head>
+      <title>Basic 0-dependency Service Worker w/ React</title>
+      <link rel="stylesheet" href="../css/styles.css">
+      <link rel="stylesheet" href="../css/markdown.css">
+    </head>
+    <body>
+      <div class='container'>
+        <div class='logo'><a href='../../index.html'><img src='../images/full-stack-logo.svg'></a></div>
+        <div class='links'>
+          <a href='../pages/about.html'>About</a>
+          <a href='../pages/contact.html'>Contact</a>
+          <a href='../pages/fun.html'>Fun Stuff</a>
+        </div>
+      </div>
+      <div class='markdown-body'>
+        <h1 id="building-a-dead-simple-background-data-fetcher">Building a dead-simple background data fetcher</h1>
+<p>This post outlines a very basic implementation of service workers in a simple React app.</p>
+<h3 id="the-problem">The Problem</h3>
+<p>It&#39;s usually safe to assume that our friends at the back end engineering department have created a flawless API that is quick, deterministic and relialbe. An API where you only have to call it once and get back all the relevant data. For those times when this assumption <em>does not</em> hold, it might become necessary to do some front end sorcery in order to make your app fast.</p>
+<p>For a project recently, we were dealing with an API that had data split across several endpoints, specifically to render a single page required a minimum of 12 requests that were taking anywhere from 50-200ms. Obviously this created quite a bottleneck when the page renders.</p>
+<h3 id="enter-service-workers">Enter Service Workers!</h3>
+<p>What is a service worker? A serivce worker is a script that runs in the background of your app that allows it do non blocking functionality (like fetching remote data!). Our app is built with react and there are no shortage of helpful npm libraries -- however, I wanted to see if it was possible to write one in pure javascript. The following is a skeleton of our app layout:</p>
+<pre><code class="hljs language-bash">├── components
+│   ├── App.jsx
+├── worker.js
+</code></pre>
+<p>We&#39;re going to load the service worker in App.jsx and the background process is going to run in worker.js. Thats it!</p>
+<pre><code class="hljs language-javascript"><span class="hljs-comment">//creating a worker in your app and listening to data</span>
+<span class="hljs-keyword">let</span> worker = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-string">&#x27;reallyslowfile.js&#x27;</span>);
+worker.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">&#x27;message&#x27;</span>, <span class="hljs-function">(<span class="hljs-params">e</span>) =&gt;</span> <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(e.<span class="hljs-property">data</span>));
+worker.<span class="hljs-title function_">postMessage</span>(<span class="hljs-string">&#x27;message we want to send to worker&#x27;</span>);
+
+<span class="hljs-comment">//the worker that is going to do something really slow</span>
+self.<span class="hljs-title function_">addEventListener</span>(
+  <span class="hljs-string">&#x27;message&#x27;</span>,
+  <span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> (<span class="hljs-params">e</span>) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;lets do something with: &#x27;</span>, e.<span class="hljs-property">data</span>);
+    <span class="hljs-keyword">let</span> response = <span class="hljs-title function_">doSomethingSlowWithData</span>(e.<span class="hljs-property">data</span>);
+    self.<span class="hljs-title function_">postMessage</span>(response);
+  },
+  <span class="hljs-literal">false</span>
+);
+</code></pre>
+<p>In this way we have two threads running in the browser, the worker is running in App.jsx and listening for any new message from the worker. The App can also push data to the background process for doing things.</p>
+<h3 id="solving-our-multi-api-problem">Solving our multi-API problem</h3>
+<p>App.jsx</p>
+<p>Our app is a basic e-commerce app that lets users view a product. When a user selects a new product, we want to have our service worker pre-fetch the API data for all the related products that the user <em>might</em> click on next.</p>
+<pre><code class="hljs language-javascript"><span class="hljs-comment">// load in our App.jsx</span>
+<span class="hljs-keyword">const</span> backgroundCacher = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Worker</span>(<span class="hljs-keyword">new</span> <span class="hljs-title function_">URL</span>(<span class="hljs-string">&#x27;../worker.js&#x27;</span>, <span class="hljs-keyword">import</span>.<span class="hljs-property">meta</span>.<span class="hljs-property">url</span>));
+
+<span class="hljs-comment">// when our App component mounts, create the service worker listener</span>
+<span class="hljs-title function_">componentDidMount</span>(<span class="hljs-params"></span>) {
+  backgroundCacher.<span class="hljs-title function_">addEventListener</span>(<span class="hljs-string">&#x27;message&#x27;</span>, <span class="hljs-keyword">function</span> (<span class="hljs-params">e</span>) {
+    <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;Message from Worker: &#x27;</span> + e.<span class="hljs-property">data</span>);
+  });
+}
+
+<span class="hljs-comment">// When the user changes the page (sele)</span>
+<span class="hljs-title function_">selectNewProduct</span>(<span class="hljs-params"></span>) {
+  <span class="hljs-title function_">doSomeReactStateUpdating</span>();
+  <span class="hljs-keyword">let</span> ids = <span class="hljs-title function_">idsThatWeWantToPreFetch</span>();
+  <span class="hljs-comment">//send the ids to the service worker</span>
+  backgroundCacher.<span class="hljs-title function_">postMessage</span>(ids);
+}
+</code></pre>
+<p>Thats it! Our react app is now set up to do two things (1) listen for responses from the service worker (2) sends a message to the background process telling it to pre-fetch.</p>
+<p>Our service worker:</p>
+<pre><code class="hljs language-javascript">self.<span class="hljs-title function_">addEventListener</span>(
+  <span class="hljs-string">&#x27;message&#x27;</span>,
+  <span class="hljs-keyword">async</span> <span class="hljs-keyword">function</span> (<span class="hljs-params">e</span>) {
+    <span class="hljs-keyword">let</span> result = [];
+    <span class="hljs-keyword">for</span> (i = <span class="hljs-number">0</span>; i &lt; e.<span class="hljs-property">data</span>.<span class="hljs-property">length</span>; i++) {
+      <span class="hljs-keyword">let</span> data = <span class="hljs-keyword">await</span> <span class="hljs-title function_">fetchDataFromTerribleAPI</span>(e.<span class="hljs-property">data</span>[i]);
+      result.<span class="hljs-title function_">push</span>(data);
+    }
+    self.<span class="hljs-title function_">postMessage</span>(result);
+  },
+  <span class="hljs-literal">false</span>
+);
+</code></pre>
+<p>We&#39;re done! The script has been running in the background while the user is happily browsing our App. After 5-10 seconds when all the API calls finish running, the worker will post the result back to our event handler.</p>
+<p>All the handler does now is <code>console.log</code> but in practice we would re-render the page with the fresh data.</p>
+<h3 id="bonus-problem">Bonus Problem</h3>
+<p>Kicking off a bunch of API calls in the background resulting in getting rate limited. As a result we implemented some basic throttling using an npm library called localforage that stores data in IndexedDB. (Side note: standard browser local storage is NOT shared between service workers and the thread running your app). The localforage library provides a simple get/set interface similar to localstorage to access the db.</p>
+<pre><code class="hljs language-javascript"><span class="hljs-comment">//logging each API call</span>
+<span class="hljs-keyword">let</span> data = <span class="hljs-keyword">await</span> localforage.<span class="hljs-title function_">getItem</span>(<span class="hljs-string">&#x27;apicalls&#x27;</span>)
+<span class="hljs-keyword">await</span> localforage = localforage.<span class="hljs-title function_">setItem</span>(<span class="hljs-string">&#x27;apicalls&#x27;</span>, [...data, <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>().<span class="hljs-title function_">getTime</span>()]);
+
+<span class="hljs-comment">//in our service worker</span>
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">getAPICallsInLastMinute</span> = (<span class="hljs-params"></span>) =&gt; {
+  <span class="hljs-keyword">let</span> threshold = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Date</span>().<span class="hljs-title function_">getTime</span>() - <span class="hljs-number">60</span> * <span class="hljs-number">1000</span>;
+  <span class="hljs-keyword">return</span> localforage.<span class="hljs-title function_">getItem</span>(<span class="hljs-string">&#x27;apicalls&#x27;</span>).<span class="hljs-title function_">filter</span>(<span class="hljs-function"><span class="hljs-params">x</span> =&gt;</span> x &gt; threshold).<span class="hljs-property">length</span>;
+}
+
+<span class="hljs-comment">//go to sleep app!</span>
+<span class="hljs-keyword">const</span> <span class="hljs-title function_">sleep</span> = (<span class="hljs-params">ms</span>) =&gt; <span class="hljs-keyword">new</span> <span class="hljs-title class_">Promise</span>(<span class="hljs-function">(<span class="hljs-params">resolve</span>) =&gt;</span> <span class="hljs-built_in">setTimeout</span>(resolve, ms));
+
+<span class="hljs-keyword">while</span>(<span class="hljs-title function_">getAPICallsInLastMinute</span>() &gt; <span class="hljs-number">50</span>){
+  <span class="hljs-keyword">await</span> <span class="hljs-title function_">sleep</span>(<span class="hljs-number">5000</span>);
+}
+</code></pre>
+
+      </div>
+    </body>
+  </html>
+  

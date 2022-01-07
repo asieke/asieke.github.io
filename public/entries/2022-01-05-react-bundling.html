@@ -1,0 +1,48 @@
+
+  <html>
+    <head>
+      <title>Why is React so SLOW (and the 3 lines of code to speed it up)</title>
+      <link rel="stylesheet" href="../css/styles.css">
+      <link rel="stylesheet" href="../css/markdown.css">
+    </head>
+    <body>
+      <div class='container'>
+        <div class='logo'><a href='../../index.html'><img src='../images/full-stack-logo.svg'></a></div>
+        <div class='links'>
+          <a href='../pages/about.html'>About</a>
+          <a href='../pages/contact.html'>Contact</a>
+          <a href='../pages/fun.html'>Fun Stuff</a>
+        </div>
+      </div>
+      <div class='markdown-body'>
+        <h2 id="why-is-react-so-slow">Why is React so SLOW!</h2>
+<p>It pains me deep in my soul when a basic app has a bundled javascript file that is 3-4mb. For this reason, I usually avoid looking inside the node modules folder. For those times when you simply must use a giant node module to do something simple like render a date, then YOU might benefit quite a bit from some of the following compression.</p>
+<h3 id="problem">Problem</h3>
+<p>The project involved building a simply single page app that resulted in an uncompressed bundle.js file of about 3mb. The performance tooling in chrome let us know that it was taking roughly 3-4 seconds to load this file in chrome and it tipped us off that using compression might substantially improve performance.</p>
+<h3 id="the-solution-3-lines-what">The Solution (3 lines, what!@?)</h3>
+<p>The compression library can provide some middleware that lets our express server serve compres</p>
+<pre><code class="hljs language-bash">npm install compression --save
+</code></pre>
+<pre><code class="hljs language-javascript"><span class="hljs-comment">//in our express server</span>
+<span class="hljs-keyword">var</span> compression = <span class="hljs-built_in">require</span>(‘compression’); <span class="hljs-comment">//import to app</span>
+app.<span class="hljs-title function_">use</span>(<span class="hljs-title function_">compression</span>());
+</code></pre>
+<p>The compression middleware will automatically compress, on the fly, the bundle.js file. This improved our performance time to first render form &gt;3s to ~1s. Pretty good ROI from adding these 3 lines to the app.</p>
+<h3 id="the-better-solution">The BETTER solution.</h3>
+<p>Apparently the above solution is somewhat inefficient. It requires your express server to do work on every load. The better way would be to just compile the bundle upfront and then tell express to just render the compressed file.</p>
+<p>Install the compression-webpack library. This will allow webpack to compress all your public .js files into .js.gz.</p>
+<pre><code class="hljs language-bash">npm install compression-webpack-plugin
+</code></pre>
+<pre><code class="hljs language-javascript"><span class="hljs-comment">//in webpack.js</span>
+<span class="hljs-keyword">var</span> <span class="hljs-title class_">CompressionPlugin</span> = <span class="hljs-built_in">require</span>(<span class="hljs-string">&#x27;compression-webpack-plugin&#x27;</span>);
+
+<span class="hljs-variable language_">module</span>.<span class="hljs-property">exports</span> = {
+  <span class="hljs-attr">plugins</span>: [<span class="hljs-keyword">new</span> <span class="hljs-title class_">CompressionPlugin</span>()],
+};
+</code></pre>
+<p>Now when webpack runs you&#39;ll see the new .js.gz files which are anywhere from 60-80% smaller than the uncompressed version. This had a similar performance increase to the <em>worse</em> solution, but feels more durable.</p>
+
+      </div>
+    </body>
+  </html>
+  
