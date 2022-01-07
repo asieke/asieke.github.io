@@ -1,31 +1,32 @@
 <html>
+  <head>
+    <title>Alex's Journal</title>
+    <link rel="stylesheet" href="public/css/styles.css" />
+    <meta name="viewport" />
+  </head>
 
-<head>
-  <title>Alex's Journal</title>
-  <link rel="stylesheet" href="public/css/styles.css">
-</head>
-
-<body>
-  <div class='container'>
-    <div class='logo'><img src='public/images/full-stack-logo.svg'></div>
-    <div class='links'>
-      <a href='public/pages/about.html'>About</a>
-      <a href='public/pages/contact.html'>Contact</a>
-      <a href='public/pages/fun.html'>Fun Stuff</a>
+  <body>
+    <div class="container">
+      <div class="logo">
+        <img src="public/images/full-stack-logo.svg" height="50" width="147" />
+      </div>
+      <div class="links">
+        <a href="public/pages/about.html">About</a>
+        <a href="public/pages/contact.html">Contact</a>
+        <a href="public/pages/fun.html">Fun Stuff</a>
+      </div>
     </div>
-  </div>
-  <div class='tablecontainer'>
-    <h1>Table of Contents</h1>
-    <div id='tableofcontents'></div>
-  </div>
-</body>
-
+    <div class="tablecontainer">
+      <h1>Table of Contents</h1>
+      <div id="tableofcontents"></div>
+    </div>
+  </body>
 </html>
 
-<script src='public/data.js'></script>
+<script src="public/data.js"></script>
 <script>
   window.onload = function () {
-    TABLE_OF_CONTENTS.forEach(i => {
+    TABLE_OF_CONTENTS.forEach((i) => {
       let html = `
         <div class='table-item'>
           <div class='table-date'>
@@ -37,8 +38,8 @@
             <span>${i.description}</span>
           </div>
         </div>
-      `
-      document.getElementById("tableofcontents").insertAdjacentHTML("afterend", html);
+      `;
+      document.getElementById('tableofcontents').insertAdjacentHTML('afterend', html);
     });
   };
 </script>
