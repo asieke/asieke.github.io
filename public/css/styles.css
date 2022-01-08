@@ -38,8 +38,10 @@ body {
 }
 
 h1 {
-  font-size: 24px;
-  color: black;
+  margin-top: 25px;
+  padding: 10px;
+  font-size: 18px;
+  color: #333;
   border-bottom: 1px solid #ccc;
   font-weight: bold;
   -webkit-font-smoothing: antialiased;
@@ -48,12 +50,13 @@ h1 {
 }
 
 .tablecontainer {
+  margin-top: 10px;
 }
 
 .table-item {
   display: flex;
   background-color: #e6e4e4;
-  margin-bottom: 25px;
+  margin: 20px 0px 20px 0px;
   padding: 8px 15px;
 }
 
@@ -64,6 +67,7 @@ h1 {
 }
 
 .table-meta {
+  margin: 0px;
 }
 
 .table-meta span,

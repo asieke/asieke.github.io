@@ -7,7 +7,7 @@
     </head>
     <body>
       <div class='header'>
-        <div class='logo'><a href='../../index.html'><img src='../images/full-stack-logo.svg' height='50' width='147'></a></div>
+        <div class='logo'><a href='../../index.html'><img src='../images/full-stack-logo.svg' height='50' width='160'></a></div>
         <div class='links'>
           <a href='../pages/about.html'>About</a>
           <a href='../pages/contact.html'>Contact</a>
@@ -15,8 +15,8 @@
         </div>
       </div>
       <div class='markdown-body'>
-        <h1 id="my-first-journal-entry">My First Journal Entry</h1>
-<p>The throwback blog generator was a fun node exploration.  There is no shortage of bare bones blog generators, but I thought it would be fun to create my own.  My requirements were:</p>
+        <h1 id="creating-a-throwback-blog-generator">Creating a Throwback Blog Generator</h1>
+<p>The throwback blog generator was a fun node exploration. There is no shortage of bare bones blog generators, but I thought it would be fun to create my own. My requirements were:</p>
 <ul>
 <li>Write blog entries in markdown</li>
 <li>A simple build process that converts markdown into HTML</li>
@@ -24,7 +24,7 @@
 <li>One click deploy</li>
 </ul>
 <h2 id="blog-generator">Blog Generator!</h2>
-<p>The basic setup of the blog generator app used for this site is below.  Blog posts and the basic info pages are all written in the <code>/markdown</code> directory.  When <code>build.js</code> runs, it parses the markdown and generates the static HTML pages in the <code>/public</code> directory.  Any entries that are edited / created / deleted in <code>/markdown</code> are automatically updated in <code>/public</code> after running <code>build.js</code></p>
+<p>The basic setup of the blog generator app used for this site is below. Blog posts and the basic info pages are all written in the <code>/markdown</code> directory. When <code>build.js</code> runs, it parses the markdown and generates the static HTML pages in the <code>/public</code> directory. Any entries that are edited / created / deleted in <code>/markdown</code> are automatically updated in <code>/public</code> after running <code>build.js</code></p>
 <pre><code class="hljs language-bash">├── build.js
 ├── index.html
 ├── markdown
@@ -58,10 +58,10 @@ This code runs during the build process + then some basic css is required to sty
   <span class="hljs-attr">sanitize</span>: <span class="hljs-literal">false</span>,
   <span class="hljs-attr">smartLists</span>: <span class="hljs-literal">true</span>,
   <span class="hljs-attr">smartypants</span>: <span class="hljs-literal">false</span>,
-  <span class="hljs-attr">xhtml</span>: <span class="hljs-literal">false</span>
+  <span class="hljs-attr">xhtml</span>: <span class="hljs-literal">false</span>,
 });
 </code></pre>
-<p>One click deploy was accomplished with the following script.  Learned some silly bash / github scripting that enabled me to add a commit message with the current date.</p>
+<p>One click deploy was accomplished with the following script. Learned some silly bash / github scripting that enabled me to add a commit message with the current date.</p>
 <pre><code class="hljs language-json">  <span class="hljs-attr">&quot;scripts&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-punctuation">{</span>
     <span class="hljs-attr">&quot;start&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;node index.js&quot;</span><span class="hljs-punctuation">,</span>
     <span class="hljs-attr">&quot;dev&quot;</span><span class="hljs-punctuation">:</span> <span class="hljs-string">&quot;nodemon index.js&quot;</span><span class="hljs-punctuation">,</span>
@@ -69,7 +69,7 @@ This code runs during the build process + then some basic css is required to sty
   <span class="hljs-punctuation">}</span><span class="hljs-punctuation">,</span>
 </code></pre>
 <h2 id="deploy">Deploy</h2>
-<p>Using <code>Github Pages</code> static site hosting, which was very simple to set up.  The one gotcha is that Github pages uses <a href="https://jekyllrb.com/">Jeykll</a> to render static sites.  Since the whole point of this exploration was to create a static site generator, I needed to add a <code>.nojekyll</code> file to the root directory of the project in order to have github simply serve the static pages.</p>
+<p>Using <code>Github Pages</code> static site hosting, which was very simple to set up. The one gotcha is that Github pages uses <a href="https://jekyllrb.com/">Jeykll</a> to render static sites. Since the whole point of this exploration was to create a static site generator, I needed to add a <code>.nojekyll</code> file to the root directory of the project in order to have github simply serve the static pages.</p>
 
       </div>
     </body>
