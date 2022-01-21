@@ -1,0 +1,240 @@
+
+  <html>
+    <head>
+      <title>Dockerizing a Node+Express+Postgress App (with NGINX)</title>
+      <link rel="stylesheet" href="../css/styles.css">
+      <link rel="stylesheet" href="../css/markdown.css">
+    </head>
+    <body>
+      <div class='header'>
+        <div class='logo'><a href='../../index.html'><img src='../images/full-stack-logo.svg' height='50' width='160'></a></div>
+        <div class='links'>
+          <a href='../pages/about.html'>About</a>
+          <a href='../pages/contact.html'>Contact</a>
+          <a href='../pages/fun.html'>Fun Stuff</a>
+        </div>
+      </div>
+      <div class='markdown-body'>
+        <h1 id="dockerizing-a-nodeexpresspostgress-app-with-nginx">Dockerizing a Node+Express+Postgress App (with NGINX)</h1>
+<p>The following is a step by step guide to dockerizing a basic Node.js application. Before starting you should have a basic understanding of Containers and Images. Here is the basic layout of the app we will be moving into containers.</p>
+<pre><code class="hljs language-bash">├── database
+│   ├── DATA.sql
+├── server
+│   ├── index.js
+├── package.json
+</code></pre>
+<p><code>DATA.sql</code> is simply a dump of a POSTGRES database that is queried by a vanilla express app (<code>index.js</code>) that serves a handful of basic GET routes. A quick note about getting to this point, the DATA.sql file was created using the following command. The <code>no-privileges</code> and <code>no-owner</code> commands are important as we will be specifying a new super user when the POSTGRES database runs inside the docker container.</p>
+<pre><code class="hljs language-bash">pg_dump -h localhost -U sieke --no-privileges --no-owner xxDBNAMExx &gt;&gt; DATA.sql
+</code></pre>
+<h2 id="what-is-the-goal">What is the Goal?</h2>
+<p>We are going to take the following high level steps to turn our basic API into one that has 5 containers (below).</p>
+<ol>
+<li>Set up a dockerfile to create a postgres docker image for running our database.</li>
+<li>Set up a dockerfile to create a node docker image for running our API(s).</li>
+<li>Create a docker-compose.yml configuration to &quot;link&quot; our 5 containers together.</li>
+<li>Set up a dockerfile to create an nginx docker image for load balancer / reverse proxy.</li>
+<li>Make some final modifications to our server to make sure it can connect to our new containerized database.</li>
+<li>Use docker-compose to launch our images + containers.</li>
+</ol>
+<img src="../images/entries/docker-schema.png" width="400">
+
+<p>The first container will run NGINX and will be used as a load-balancing reverse-proxy that distributes 1/3 of requests to each of our servers. Our express API server will be deployed in 3 separate containers. Each of the 3 containers will point to a single Postgres database.</p>
+<p>An added benefit of having incoming requests hit the NGINX server is the ease of adding a caching layer. A few lines added to the config yields incredibly flexible caching options.</p>
+<h2 id="1-postgres-container">1. Postgres Container</h2>
+<p>We&#39;re going to create filed called <code>Dockerfile</code> in the /database/ directory. This file will contain the instructions for creating our Postgres Image.</p>
+<pre><code class="hljs language-bash">├── database
+│   ├── DATA.sql
+│   ├── Dockerfile
+</code></pre>
+<p>The Dockerfile should contain the following instructions.</p>
+<pre><code class="hljs language-dockerfile"><span class="hljs-comment">#database/Dockerfile</span>
+<span class="hljs-keyword">FROM</span> postgres:latest
+
+<span class="hljs-keyword">ENV</span> POSTGRES_USER my-username
+<span class="hljs-keyword">ENV</span> POSTGRES_PASSWORD my-password
+<span class="hljs-keyword">ENV</span> POSTGRES_DB my-database
+
+<span class="hljs-keyword">COPY</span><span class="language-bash"> DATA.sql /docker-entrypoint-initdb.d/</span>
+</code></pre>
+<p>The Dockerfile will pull the latest postgres image. Setting the 3 environment variables will initialize the container with those a SQL user/pass and create a db. The my-database name should match the name of the local db that you used in your local application.</p>
+<p>Finally, the Dockerfile copies the DATA.sql dump file into a special folder inside the instance. The script will automatically run when the instance starts.</p>
+<h2 id="2-api-node--express-containers">2. API (Node + Express) Containers</h2>
+<p>We&#39;re going to create a second Dockerfile in the root directory of our project (same as package.json).</p>
+<pre><code class="hljs language-dockerfile"><span class="hljs-comment">#database/Dockerfile</span>
+<span class="hljs-keyword">FROM</span> node:<span class="hljs-number">12</span>
+<span class="hljs-keyword">WORKDIR</span><span class="language-bash"> /app</span>
+<span class="hljs-keyword">COPY</span><span class="language-bash"> package*.json ./</span>
+<span class="hljs-keyword">RUN</span><span class="language-bash"> npm install</span>
+<span class="hljs-keyword">COPY</span><span class="language-bash"> . .</span>
+<span class="hljs-keyword">COPY</span><span class="language-bash"> .env_docker .<span class="hljs-built_in">env</span></span>
+<span class="hljs-keyword">ENV</span> PORT=<span class="hljs-number">8080</span>
+<span class="hljs-keyword">EXPOSE</span> <span class="hljs-number">8080</span>
+<span class="hljs-keyword">CMD</span><span class="language-bash"> [ <span class="hljs-string">&quot;npm&quot;</span>, <span class="hljs-string">&quot;start&quot;</span> ]</span>
+</code></pre>
+<p>The above dockerfile contains the instructions for building our Node.js API. It creates the image from the base node image, sets the working directory, copies package.json from our local machine to the image, then runs npm install.</p>
+<p>The <code>Copy . .</code> command will copy everything from our local project directory. Because we do not want to include things like node_modules and most importantly our database folder, we can add a <code>.dockerignore</code> file which functions the same as a .gitignore file.</p>
+<p><code>ENV PORT=8080 \n EXPOSE 8080</code> specifies that our webserver will run on port 8080 from inside the container. We will still need to map this internal port to an external port (which will happen later when we use docker-compose to create a multi-container app)</p>
+<pre><code class="hljs language-dockerfile"><span class="hljs-comment">#.dockerignore</span>
+node_modules/
+database/
+..
+</code></pre>
+<h2 id="3-docker-compose-defining-our-services">3. docker-compose, defining our services</h2>
+<p>Docker-compose is a tool for easily defining and running multi-container Docker applications, like this! All we need to do is create a <code>docker-compose.yml</code> file in our root directory that will define the names of our services.</p>
+<pre><code class="hljs language-yml"><span class="hljs-attr">version:</span> <span class="hljs-string">&#x27;3.9&#x27;</span>
+
+<span class="hljs-attr">services:</span>
+  <span class="hljs-attr">db:</span>
+    <span class="hljs-attr">build:</span> <span class="hljs-string">database/</span>
+    <span class="hljs-attr">ports:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">&#x27;5432:5432&#x27;</span>
+  <span class="hljs-attr">api1:</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">MESSAGE=API1</span>
+    <span class="hljs-attr">build:</span> <span class="hljs-string">.</span>
+    <span class="hljs-attr">ports:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">&#x27;3001:8080&#x27;</span>
+  <span class="hljs-attr">api2:</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">MESSAGE=API2</span>
+    <span class="hljs-attr">build:</span> <span class="hljs-string">.</span>
+    <span class="hljs-attr">ports:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">&#x27;3002:8080&#x27;</span>
+  <span class="hljs-attr">api3:</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">MESSAGE=API3</span>
+    <span class="hljs-attr">build:</span> <span class="hljs-string">.</span>
+    <span class="hljs-attr">ports:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">&#x27;3003:8080&#x27;</span>
+  <span class="hljs-attr">nginx:</span>
+    <span class="hljs-attr">build:</span> <span class="hljs-string">nginx/</span>
+    <span class="hljs-attr">ports:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">&#x27;8080:80&#x27;</span>
+    <span class="hljs-attr">depends_on:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">api1</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">api2</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">api3</span>
+</code></pre>
+<p>Our 5 services will be called <code>db</code> <code>api1</code> <code>api2</code> <code>api3</code> and <code>nginx</code>. Each of our servers has port specifications that map the internal ports (8080 -&gt; 3001/3002/3003) for our three APIs, and (80 -&gt; 8080) for our nginx server.</p>
+<p>Eventually when the containers are running on our local machine we will be able to access the application @ localhost:8080.</p>
+<p>The build command here specifies where to look for the 3 dockerfiles we&#39;ve created (we&#39;ll create the nginx one in a second).</p>
+<p>The final property is <code>depends_on</code> which basically tells docker to wait to start nginx until after the three api services have started.</p>
+<h2 id="4-nginx-container">4. NGINX Container</h2>
+<p>We now need to create our final Dockerfile to define our NGINX container.</p>
+<p>NGINX is super fast web server that we are going to use to serve 2 functions:</p>
+<ol>
+<li>Load balancing, since we will eventually run our Node.js API x3, the NGINX server will load balance all requests, spreading them evenly across the 3 servers.</li>
+<li>Caching - we can specify options for caching which will significantly speed up the rate at which our service can respond to requests.</li>
+</ol>
+<p>We need to create a new directory at the root (same level as <code>server/</code> and <code>database/</code>) called <code>nginx</code>.</p>
+<pre><code class="hljs language-bash">├── nginx
+│   ├── nginx.conf
+│   ├── Dockerfile
+</code></pre>
+<pre><code class="hljs language-bash"><span class="hljs-comment">#nginx.conf</span>
+upstream loadbalancer {
+  server 172.17.0.1:3001 weight=1;
+  server 172.17.0.1:3002 weight=1;
+  server 172.17.0.1:3003 weight=1;
+}
+
+proxy_cache_path /etc/nginx/cache keys_zone=my_cache:10m max_size=500m inactive=60m use_temp_path=off;
+
+server {
+    location / {
+        proxy_cache my_cache;
+        proxy_cache_valid 200 30s;
+        proxy_cache_methods GET;
+        proxy_cache_min_uses 1;
+        proxy_cache_use_stale error <span class="hljs-built_in">timeout</span> http_500 http_502 http_503 http_504;
+        proxy_pass http://loadbalancer;
+    }
+}
+</code></pre>
+<p>The <code>upstream</code> command defines the URLs where we want our load balancer to pass requests. <code>172.17.0.1</code> is the hard coded default IP inside our API containers, but you may need to change this. 3001-3003 are the ports we defined for our API services in the <code>docker-compose.yml</code>.</p>
+<p>The proxy_cache* instructions here define the options for our caching layer. You can read more about these options @ <a href="http://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_cache">Proxy Cache docs</a>.</p>
+<p>The final required field is our reverse proxy definition. <code>proxy_pass http://{loadbalancer}</code> tells the server where to proxy requests defined in the <code>upstream</code> command above.</p>
+<pre><code class="hljs language-dockerfile"><span class="hljs-comment">#nginx/Dockerfile</span>
+<span class="hljs-keyword">FROM</span> nginx
+<span class="hljs-keyword">RUN</span><span class="language-bash"> <span class="hljs-built_in">rm</span> /etc/nginx/conf.d/default.conf</span>
+<span class="hljs-keyword">COPY</span><span class="language-bash"> nginx.conf /etc/nginx/conf.d/default.conf</span>
+</code></pre>
+<p>The NGINX Dockerfile creates an image from the nginx base. Then it removes and copies our conf file into the proper directory within the container. Thats it!</p>
+<h2 id="final-tweaks-to-our-nodejs-server">Final Tweaks to our Node.js Server</h2>
+<p>At this point our directory structure should be the following:</p>
+<pre><code class="hljs language-bash">├── database
+│   ├── DATA.sql
+│   ├── Dockerfile
+├── nginx
+│   ├── nginx.conf
+│   ├── Dockerfile
+├── server
+│   ├── index.js
+├── package.json
+├── Dockerfile
+├── .dockerignore
+├── docker-compose.yml
+├── .env_docker <span class="hljs-comment">#not created yet, but we will now!</span>
+</code></pre>
+<p>The two changes we need to make are:</p>
+<ol>
+<li>Our <code>server/index.js</code> is currently pointing to our local instance of Postgres, we need to make sure when it starts running inside our container it will properly point to the containerized postgres.</li>
+<li>When all the services start there will be a race condition between the APIs and the database. We need to add some retry logic to the servers to make sure they re-attempt to connect.</li>
+</ol>
+<h3 id="pointing-to-containerized-postgres">Pointing to Containerized Postgres</h3>
+<p>In our main Dockerfile, the line <code>COPY .env_docker .env</code> copies the file .env_docker into our Nodejs image.</p>
+<pre><code class="hljs language-bash"><span class="hljs-comment">##/.env_docker</span>
+PGUSER=my-user
+PGPASSWORD=my-password
+PGHOST=db
+PGPORT=5432
+PGDATABASE=my-database
+</code></pre>
+<p><code>my-user</code> <code>my-password</code> and <code>my-database</code> should match the properties you specified in the <code>database/Dockerfile</code>.</p>
+<p>The big GOTHCA here is that PGHOST=db. Typically this would point to <code>localhost</code>. But since the db will be running inside a separate container, localhost will no longer work. Assigning <code>PGHOSE=db</code> is some docker-compose magic that will dynamically route requests to the host in our database container. <em>Make Sure</em> that this value matches the name of the service defined in your docker-compose.yml.</p>
+<h3 id="retry-logic-in-our-server">Retry logic in our server</h3>
+<p>I added the following logic to the API that will try to connect for 10:00 to the database. Note that <code>new Pool()</code> does not need parameters if they are defined as environment variables as they are in the .env_docker file above.</p>
+<pre><code class="hljs language-javascript"><span class="hljs-keyword">const</span> connect = <span class="hljs-keyword">async</span> () =&gt; {
+  <span class="hljs-keyword">let</span> retries = <span class="hljs-number">20</span>;
+  <span class="hljs-keyword">while</span> (retries) {
+    <span class="hljs-keyword">try</span> {
+      pool = <span class="hljs-keyword">new</span> <span class="hljs-title class_">Pool</span>();
+      <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;&gt;&gt;&gt;CONNECTED TO DB&#x27;</span>);
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+    } <span class="hljs-keyword">catch</span> (err) {
+      <span class="hljs-variable language_">console</span>.<span class="hljs-title function_">log</span>(<span class="hljs-string">&#x27;&gt;&gt;&gt;&gt;&gt;ERROR CONNECTING TO DB, retrying:&#x27;</span>, retries);
+      <span class="hljs-keyword">await</span> <span class="hljs-title function_">sleep</span>(<span class="hljs-number">30000</span>);
+    }
+    retries--;
+  }
+  <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span>;
+};
+</code></pre>
+<h2 id="magic---time-to-launch-our-containers">MAGIC - time to LAUNCH our Containers.</h2>
+<p>Now that we&#39;ve</p>
+<ol>
+<li>Created our image definitions in the Dockerfiles</li>
+<li>Created a docker-compose file</li>
+<li>Tweaked our service to run in a containerized environment</li>
+</ol>
+<p>Its time to run docker-compose</p>
+<pre><code class="hljs language-bash">docker-compose up -d
+</code></pre>
+<p><code>(-d)</code> option simply runs this in detached mode (as a background process).</p>
+<p>Docker-compose will automatically name your containers after the root project directory. Running <code>docker ps</code> should show you your containers.</p>
+<pre><code class="hljs language-bash">$ docker ps
+
+CONTAINER ID   IMAGE                 COMMAND                  CREATED       STATUS       PORTS                    NAMES
+0d1a8387d655   api2_nginx   <span class="hljs-string">&quot;/docker-entrypoint.…&quot;</span>   5 hours ago   Up 5 hours   0.0.0.0:8080-&gt;80/tcp     api2-nginx-1
+ad7726d65cef   api2_api1    <span class="hljs-string">&quot;docker-entrypoint.s…&quot;</span>   5 hours ago   Up 5 hours   0.0.0.0:3001-&gt;8080/tcp   api2-api1-1
+664ae6aae037   api2_api3    <span class="hljs-string">&quot;docker-entrypoint.s…&quot;</span>   5 hours ago   Up 5 hours   0.0.0.0:3003-&gt;8080/tcp   api2-api3-1
+d7b3d2d55dea   api2_db      <span class="hljs-string">&quot;docker-entrypoint.s…&quot;</span>   5 hours ago   Up 5 hours   0.0.0.0:5432-&gt;5432/tcp   api2-db-1
+5f67fd9c1388   api2_api2    <span class="hljs-string">&quot;docker-entrypoint.s…&quot;</span>   5 hours ago   Up 5 hours   0.0.0.0:3002-&gt;8080/tcp   api2-api2-1
+</code></pre>
+<h3 id="final-check">Final Check</h3>
+<p>You should see your completed API at <code>localhost:8080</code>. You&#39;re getting a request back from the nginx server!</p>
+
+      </div>
+    </body>
+  </html>
+  
